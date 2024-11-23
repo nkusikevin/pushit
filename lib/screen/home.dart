@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pushit/screen/notifications.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,7 +10,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final List<String> _titles = ['Home', 'Search', 'Profile'];
+  final List<String> _titles = ['Home', 'Search', 'Notifications', 'Profile'];
 
   // Mock notifications data
   final List<NotificationItem> _notifications = [
@@ -17,11 +18,25 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'New Message',
       description: 'You have a new message from John',
       time: '2m ago',
+      isRead: false,
     ),
     NotificationItem(
       title: 'Event Reminder',
       description: 'Team meeting in 30 minutes',
       time: '5m ago',
+      isRead: false,
+    ),
+    NotificationItem(
+      title: 'System Update',
+      description: 'A new version is available for download',
+      time: '1h ago',
+      isRead: true,
+    ),
+    NotificationItem(
+      title: 'Payment Successful',
+      description: 'Your subscription has been renewed',
+      time: '2h ago',
+      isRead: true,
     ),
   ];
 
@@ -31,38 +46,50 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _showQuickNotifications() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => NotificationsSheet(
+        notifications: _notifications.take(2).toList(),
+        onViewAll: () {
+          Navigator.pop(context);
+          setState(() {
+            _selectedIndex = 2; // Switch to notifications tab
+          });
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) =>
-                    NotificationsSheet(notifications: _notifications),
-              );
-            },
-          ),
-        ],
+        
       ),
-      body: Center(
-        child: _buildBody(),
-      ),
+      body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
+        type: BottomNavigationBarType.fixed, // Required for more than 3 items
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: 'Search',
           ),
           BottomNavigationBarItem(
+            // removed const here
+            icon: Badge(
+              label: Text(
+                  _notifications.where((n) => !n.isRead).length.toString()),
+              child: const Icon(Icons.notifications),
+            ),
+            label: 'Notifications',
+          ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
@@ -76,94 +103,42 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return const Column(
+        return const Center(
+          child:  Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.home, size: 80),
             SizedBox(height: 16),
             Text('Home Page Content'),
           ],
+        )
         );
       case 1:
-        return const Column(
+        return const Center(
+          child:Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search, size: 80),
             SizedBox(height: 16),
             Text('Search Page Content'),
           ],
+        )
         );
       case 2:
-        return const Column(
+        return NotificationsScreen(notifications: _notifications);
+      case 3:
+        return const Center(
+          child:  Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.person, size: 80),
             SizedBox(height: 16),
             Text('Profile Page Content'),
           ],
+        )
         );
       default:
         return const SizedBox.shrink();
     }
-  }
-}
-
-class NotificationItem {
-  final String title;
-  final String description;
-  final String time;
-
-  NotificationItem({
-    required this.title,
-    required this.description,
-    required this.time,
-  });
-}
-
-class NotificationsSheet extends StatelessWidget {
-  final List<NotificationItem> notifications;
-
-  const NotificationsSheet({
-    super.key,
-    required this.notifications,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Notifications',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return ListTile(
-                title: Text(notification.title),
-                subtitle: Text(notification.description),
-                trailing: Text(
-                  notification.time,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
   }
 }
