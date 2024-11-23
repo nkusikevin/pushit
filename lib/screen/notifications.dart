@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-
+import 'package:pushit/service/notification_service.dart';
 
 class NotificationItem {
   final String title;
@@ -18,10 +17,12 @@ class NotificationItem {
 
 class NotificationsScreen extends StatelessWidget {
   final List<NotificationItem> notifications;
+  final Function(NotificationItem)? onNotificationTap;
 
   const NotificationsScreen({
     super.key,
     required this.notifications,
+    this.onNotificationTap,
   });
 
   @override
@@ -39,7 +40,13 @@ class NotificationsScreen extends StatelessWidget {
               const Spacer(),
               TextButton(
                 onPressed: () {
-                  // Add mark all as read functionality
+                  // Schedule a notification for 5 seconds later
+                  NotificationService.instance.scheduleNotification(
+                    title: 'All notifications marked as read',
+                    body: 'Your notification inbox is now clean',
+                    scheduledDate:
+                        DateTime.now().add(const Duration(seconds: 5)),
+                  );
                 },
                 child: const Text('Mark all as read'),
               ),
@@ -53,6 +60,7 @@ class NotificationsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final notification = notifications[index];
               return ListTile(
+                onTap: () => onNotificationTap?.call(notification),
                 leading: CircleAvatar(
                   backgroundColor: notification.isRead
                       ? Colors.grey.withOpacity(0.2)
@@ -90,72 +98,6 @@ class NotificationsScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class NotificationsSheet extends StatelessWidget {
-  final List<NotificationItem> notifications;
-  final VoidCallback onViewAll;
-
-  const NotificationsSheet({
-    super.key,
-    required this.notifications,
-    required this.onViewAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Recent Notifications',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: onViewAll,
-                child: const Text('View All'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return ListTile(
-                title: Text(
-                  notification.title,
-                  style: TextStyle(
-                    fontWeight: notification.isRead
-                        ? FontWeight.normal
-                        : FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(notification.description),
-                trailing: Text(
-                  notification.time,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
     );
   }
 }

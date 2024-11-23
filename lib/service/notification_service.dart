@@ -1,46 +1,71 @@
 // notification_service.dart
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
   static NotificationService get instance => _instance;
+  static final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   NotificationService._();
 
-  Future<void> init() async {
-    // Initialize timezone
-    tz.initializeTimeZones();
+  // Future<void> init() async {
+  //   // Initialize timezone
+  //   tz.initializeTimeZones();
 
-    // Initialize notification settings for Android
-    const AndroidInitializationSettings androidInitializationSettings =
+  //   // Initialize notification settings for Android
+  //   const AndroidInitializationSettings androidInitializationSettings =
+  //       AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  //   // Initialize notification settings for iOS
+  //   const DarwinInitializationSettings iOSInitializationSettings =
+  //       DarwinInitializationSettings(
+  //     requestAlertPermission: true,
+  //     requestBadgePermission: true,
+  //     requestSoundPermission: true,
+  //   );
+
+  //   // Combined initialization settings
+  //   const InitializationSettings initializationSettings =
+  //       InitializationSettings(
+  //     android: androidInitializationSettings,
+  //     iOS: iOSInitializationSettings,
+  //   );
+
+  //   // Initialize the plugin
+  //   await _flutterLocalNotificationsPlugin.initialize(
+  //     initializationSettings,
+  //     onDidReceiveNotificationResponse: (NotificationResponse response) {
+  //       // Handle notification tap
+  //       print('Notification clicked: ${response.payload}');
+  //     },
+  //   );
+  // }
+
+    static Future<void> init() async {
+    // Initialize settings for different platforms
+    const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // Initialize notification settings for iOS
-    const DarwinInitializationSettings iOSInitializationSettings =
-        DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings();
 
-    // Combined initialization settings
     const InitializationSettings initializationSettings =
         InitializationSettings(
-      android: androidInitializationSettings,
-      iOS: iOSInitializationSettings,
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
     );
 
-    // Initialize the plugin
-    await _flutterLocalNotificationsPlugin.initialize(
+    // Initialize the plugin with the settings
+    await _notificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
+      // Optional: handle notification taps
+      onDidReceiveNotificationResponse: (details) {
         // Handle notification tap
-        print('Notification clicked: ${response.payload}');
       },
     );
   }

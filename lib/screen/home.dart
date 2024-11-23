@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pushit/screen/notifications.dart';
+import 'package:pushit/service/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,20 +47,44 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _showQuickNotifications() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => NotificationsSheet(
-        notifications: _notifications.take(2).toList(),
-        onViewAll: () {
-          Navigator.pop(context);
-          setState(() {
-            _selectedIndex = 2; // Switch to notifications tab
-          });
-        },
-      ),
-    );
+
+
+
+  Future<void> _initializeNotifications() async {
+    await NotificationService.init();
   }
+
+
+  
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+void _addNewNotification() {
+    // Create a new notification
+    final newNotification = NotificationItem(
+      title: 'New Alert',
+      description: 'This is a new notification (${DateTime.now().toString()})',
+      time: 'Just now',
+      isRead: false,
+    );
+
+    // Show the local notification
+    NotificationService.instance.showNotification(
+      title: newNotification.title,
+      body: newNotification.description,
+    );
+
+    // Update the state to include the new notification
+    setState(() {
+      _notifications.insert(
+          0, newNotification); // Add to the beginning of the list
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -103,15 +128,27 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return const Center(
-          child:  Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.home, size: 80),
-            SizedBox(height: 16),
-            Text('Home Page Content'),
-          ],
-        )
+    return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.home, size: 80),
+              const SizedBox(height: 16),
+              const Text('Home Page Content'),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: _addNewNotification,
+                icon: const Icon(Icons.notification_add),
+                label: const Text('Add New Notification'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       case 1:
         return const Center(
@@ -125,7 +162,17 @@ class _HomeScreenState extends State<HomeScreen> {
         )
         );
       case 2:
-        return NotificationsScreen(notifications: _notifications);
+        return NotificationsScreen(
+          notifications: _notifications,
+          onNotificationTap: (notification) {
+            // Show a local notification when tapping a notification item
+            NotificationService.instance.showNotification(
+              title: notification.title,
+              body: notification.description,
+              payload: notification.title,
+            );
+          },
+        );
       case 3:
         return const Center(
           child:  Column(
