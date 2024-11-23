@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pushit/screen/notifications.dart';
 import 'package:pushit/service/notification_service.dart';
+import 'package:pushit/service/message_handler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,7 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Future<void> _initializeNotifications() async {
-    await NotificationService.init();
+    await NotificationService.instance.init();
+    await NotificationService.instance.requestPermissions();
   }
 
 
@@ -61,6 +63,25 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeNotifications();
+
+    // Start listening for messages
+    NotificationService.instance.messageStream.listen((message) {
+      // Add new notification to the list
+      setState(() {
+        _notifications.insert(
+          0,
+          NotificationItem(
+            title: message.title,
+            description: message.body,
+            time: 'Just now',
+            isRead: false,
+          ),
+        );
+      });
+    });
+
+    // Start mock message stream (for testing)
+    MessageHandler.instance.startMockMessageStream();
   }
 
 void _addNewNotification() {
@@ -83,6 +104,13 @@ void _addNewNotification() {
       _notifications.insert(
           0, newNotification); // Add to the beginning of the list
     });
+  }
+
+   @override
+  void dispose() {
+    MessageHandler.instance.dispose();
+    NotificationService.instance.dispose();
+    super.dispose();
   }
 
 
